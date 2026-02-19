@@ -116,6 +116,10 @@ const Upload = ({ onComplete }: UploadProps) => {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
+      if (!isValidFileType(selectedFile)) {
+        setError("Invalid file type. Please upload a JPG or PNG image.");
+        return;
+      }
       setFile(selectedFile);
       processFile(selectedFile);
     }
