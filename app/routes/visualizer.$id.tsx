@@ -7,7 +7,14 @@ import { useLocation, useNavigate } from "react-router";
 const Visualizer = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { initialImage, initialRender,name } = location.state || {};
+  const { initialImage, initialRender, name } = location.state || {};
+
+  useEffect(() => {
+    if (!initialImage || typeof initialImage !== 'string') {
+      navigate('/');
+      return;
+    }
+  }, [initialImage, navigate]);
 
   const hasInitialGenerated = useRef(false);
   const [isProcessing, setIsProcessing] = useState(false);
