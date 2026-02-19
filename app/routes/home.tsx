@@ -1,7 +1,10 @@
 import type { Route } from "./+types/home";
 import Navbar from "../../components/navbar";
+import Upload from "../../components/upload";
 import Button from "components/ui/button";
+import { useNavigate } from "react-router";
 import { ArrowRight, ArrowUpRight, Layers, Clock } from "lucide-react";
+import { MAX_UPLOAD_SIZE } from "../../lib/constants";
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "New React Router App" },
@@ -10,6 +13,17 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
+  const navigate = useNavigate();
+
+  const handleUploadComplete = async (base64Data: string) => {
+    // Handle upload completion logic here
+    const newId = Date.now().toString();
+    console.log("Upload completed:", base64Data);
+    navigate(`/visualizer/${newId}`);
+
+    return true;
+  };
+
   return (
     <div className="home">
       <Navbar />
@@ -34,7 +48,7 @@ export default function Home() {
             Watch Demo
           </Button>
         </div>
-        <div id="uplaod" className="upload-shell">
+        <div id="upload" className="upload-shell">
           <div className="grid-overlay" />
           <div className="upload-card">
             <div className="upload-head">
@@ -42,9 +56,9 @@ export default function Home() {
                 <Layers className="icon" />
               </div>
               <h3>Upload your floor plan</h3>
-              <p>Supports JPG, PNG formats up to 10MB</p>
+              <p>Supports JPG, PNG formats up to {MAX_UPLOAD_SIZE / (1024 * 1024)}MB</p>
             </div>
-            <p>Upload images</p>
+            <Upload onComplete={handleUploadComplete} />
           </div>
         </div>
       </section>
