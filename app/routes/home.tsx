@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Route } from "./+types/home";
 import Navbar from "../../components/navbar";
 import Upload from "../../components/upload";
@@ -5,6 +6,8 @@ import Button from "components/ui/button";
 import { useNavigate } from "react-router";
 import { ArrowRight, ArrowUpRight, Layers, Clock } from "lucide-react";
 import { MAX_UPLOAD_SIZE } from "../../lib/constants";
+import { createProject } from "../../lib/puter.action";
+
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "New React Router App" },
@@ -14,12 +17,38 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Home() {
   const navigate = useNavigate();
+  const [projects, setProjects] = useState<DesignItem[]>([]);
 
-  const handleUploadComplete = async (base64Data: string) => {
+  const handleUploadComplete = async (base64Image: string) => {
     // Handle upload completion logic here
     const newId = Date.now().toString();
-    console.log("Upload completed:", base64Data);
-    navigate(`/visualizer/${newId}`);
+
+    const name = `Residence ${newId}`;
+
+    const newItem = {
+      id: newId,
+      name,
+      sourceImage: base64Image,
+      renderedImage: undefined,
+      timestamp: Date.now(),
+    };
+
+    const saved = await createProject({ item: newItem, visibility: "private" });
+
+    if (!saved) {
+      console.error("Failed to save project");
+      return false;
+    }
+
+    setProjects((prev) => [saved, ...prev]);
+
+    navigate(`/visualizer/${newId}`, {
+      state: {
+        initialImage: saved.sourceImage,
+        initialRender: saved.renderedImage || null,
+        name,
+      },
+    });
 
     return true;
   };
@@ -56,7 +85,10 @@ export default function Home() {
                 <Layers className="icon" />
               </div>
               <h3>Upload your floor plan</h3>
-              <p>Supports JPG, PNG formats up to {MAX_UPLOAD_SIZE / (1024 * 1024)}MB</p>
+              <p>
+                Supports JPG, PNG formats up to{" "}
+                {MAX_UPLOAD_SIZE / (1024 * 1024)}MB
+              </p>
             </div>
             <Upload onComplete={handleUploadComplete} />
           </div>
@@ -74,30 +106,34 @@ export default function Home() {
             </div>
           </div>
           <div className="projects-grid">
-            <div className="project-card group">
-              <div className="preview">
-                <img
-                  src="https://roomify-mlhuk267-dfwu1i.puter.site/projects/1770803585402/rendered.png"
-                  alt="Project Preview"
-                />
-                <div className="badge">
-                  <span>Community</span>
-                </div>
-              </div>
-              <div className="card-body">
-                <div>
-                  <h3>Project Manhattan</h3>
-                  <div className="meta">
-                    <Clock size={12} />
-                    <span>{new Date("01.01.2027").toLocaleDateString()}</span>
-                    <span>By John Doe</span>
+            {projects.map(
+              ({ id, name, sourceImage, renderedImage, timestamp }) => (
+                <div key={id} className="project-card group">
+                  <div className="preview">
+                    <img
+                      src={renderedImage || sourceImage}
+                      alt="Project Preview"
+                    />
+                    <div className="badge">
+                      <span>Community</span>
+                    </div>
+                  </div>
+                  <div className="card-body">
+                    <div>
+                      <h3>{name}</h3>
+                      <div className="meta">
+                        <Clock size={12} />
+                        <span>{new Date(timestamp).toLocaleDateString()}</span>
+                        <span>By John Doe </span>
+                      </div>
+                    </div>
+                    <div className="arrow">
+                      <ArrowUpRight size={18} />
+                    </div>
                   </div>
                 </div>
-                <div className="arrow">
-                  <ArrowUpRight size={18} />
-                </div>
-              </div>
-            </div>
+              ),
+            )}
           </div>
         </div>
       </section>
