@@ -72,7 +72,7 @@ const Visualizer = () => {
                 <p className="note">Created by you</p>
               </div>
               <div className="panel-actions">
-                <Button size="sm" onClick={() => {}}className="export" disabled={!currentImage}>
+                <Button size="sm" onClick={() => {}} className="export" disabled={!currentImage}>
                   <Download className="w-4 h-4 mr-2" /> Export
                 </Button>
                 <Button size="sm" onClick={()=> {}} className="share">
