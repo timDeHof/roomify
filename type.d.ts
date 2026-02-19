@@ -33,12 +33,12 @@ interface DesignConfig {
   style: string;
 }
 
-enum AppStatus {
-  IDLE = "IDLE",
-  UPLOADING = "UPLOADING",
-  PROCESSING = "PROCESSING",
-  READY = "READY",
-}
+const AppStatus = {
+  IDLE: "IDLE",
+  UPLOADING: "UPLOADING",
+  PROCESSING: "PROCESSING",
+  READY: "READY",
+} as const;
 
 type RenderCompletePayload = {
   renderedImage: string;

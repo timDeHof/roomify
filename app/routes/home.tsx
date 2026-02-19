@@ -45,7 +45,7 @@ export default function Home() {
     navigate(`/visualizer/${newId}`, {
       state: {
         initialImage: saved.sourceImage,
-        initialRendeered: saved.renderedImage || null,
+        initialRender: saved.renderedImage || null,
         name,
       },
     });
@@ -124,7 +124,7 @@ export default function Home() {
                       <div className="meta">
                         <Clock size={12} />
                         <span>{new Date(timestamp).toLocaleDateString()}</span>
-                        <span>By John Doe</span>
+                        <span>By John Doe </span>
                       </div>
                     </div>
                     <div className="arrow">
