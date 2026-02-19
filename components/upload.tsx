@@ -148,7 +148,7 @@ const Upload = ({ onComplete }: UploadProps) => {
             <p>
               {isSignedIn
                 ? "Click to upload or drag and drop"
-                : "sign in  or sign up with Puter to upload"}
+                : "sign in or sign up with Puter to upload"}
             </p>
             <p className="help">Maximum file size 50MB.</p>
             {error && <p className="error">{error}</p>}
