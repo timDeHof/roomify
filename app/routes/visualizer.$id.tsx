@@ -2,38 +2,46 @@ import { generate3DView } from "lib/ai.action";
 import { Box, Download, RefreshCcw, Share2, X } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { useRef, useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router";
+import { useNavigate, useOutletContext, useParams } from "react-router";
+import { createProject, getProjectById } from "lib/puter.action";
 
 const Visualizer = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
-  const { initialImage, initialRender, name } = location.state || {};
-
-  useEffect(() => {
-    if (!initialImage || typeof initialImage !== 'string') {
-      navigate('/');
-      return;
-    }
-  }, [initialImage, navigate]);
-
+  const { userId} = useOutletContext<AuthContext>();
   const hasInitialGenerated = useRef(false);
+
   const [isProcessing, setIsProcessing] = useState(false);
-  const [currentImage, setCurrentImage] = useState<string | null>(initialRender || null);
+  const [currentImage, setCurrentImage] = useState<string | null>(null);
+  const [project, setProject] = useState<DesignItem | null>(null);
+  const [isProjectLoading, setIsProjectLoading] = useState(true);
 
   const handleBack = () => navigate('/');
 
-  const runGeneration = async () => {
-    if(!initialImage) return;
+  const runGeneration = async (item: DesignItem) => {
+    if(!id || !item.sourceImage) return;
     try {
       setIsProcessing(true);
-      const result = await generate3DView({sourceImage: initialImage});
+      const result = await generate3DView({sourceImage: item.sourceImage});
       if(result.renderedImage) {
         setCurrentImage(result.renderedImage);
 
         // update the project with the rendered image
+        const updatedItem = {
+          ...item,
+          renderedImage: result.renderedImage,
+          renderedPath: result.renderedPath,
+          timestamp: Date.now(),
+          ownerId: item.ownerId ?? userId ?? null, // ensure ownerId is set, fallback to userId from context or null
+          isPublic: item.isPublic ?? false, // default to false if not set
+          };
 
+        const saved = await createProject({ item: updatedItem, visibility: "private" });
+        if(saved) {
+          setProject(saved);
+          setCurrentImage(saved.renderedImage || result.renderedImage); // update with any changes from save
+        }
       }
-
     } catch (error) {
       console.error('Error generating 3D view:', error);
     } finally {
@@ -41,16 +49,51 @@ const Visualizer = () => {
     }
   }
 
+    useEffect(() => {
+    let isMounted = true;
+
+    const loadProject = async () => {
+      if (!id) {
+        setIsProjectLoading(false);
+        return;
+      }
+
+      setIsProjectLoading(true);
+
+      const fetchedProject = await getProjectById({ id });
+
+      if (!isMounted) return;
+
+      setProject(fetchedProject);
+      setCurrentImage(fetchedProject?.renderedImage || null);
+      setIsProjectLoading(false);
+      hasInitialGenerated.current = false;
+    };
+
+    loadProject();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
+
   useEffect(() => {
-    if(!initialImage || hasInitialGenerated.current) return;
-    if(initialRender){
-      setCurrentImage(initialRender);
+    if (
+      isProjectLoading ||
+      hasInitialGenerated.current ||
+      !project?.sourceImage
+    )
+      return;
+
+    if (project.renderedImage) {
+      setCurrentImage(project.renderedImage);
       hasInitialGenerated.current = true;
       return;
     }
+
     hasInitialGenerated.current = true;
-    runGeneration();
-  }, [initialImage, initialRender]);
+    void runGeneration(project);
+  }, [project, isProjectLoading]);
 
   return (
       <div className="visualizer">
@@ -68,7 +111,7 @@ const Visualizer = () => {
             <div className="panel-header">
               <div className="panel-meta">
                 <p>Project</p>
-                <h2>{name || 'Untitled Project'}</h2>
+                <h2>{project?.name || `Residence ${id}`}</h2>
                 <p className="note">Created by you</p>
               </div>
               <div className="panel-actions">
@@ -85,8 +128,8 @@ const Visualizer = () => {
                 <img src={currentImage} alt="AI Rendered Image" className="rendered-img" />
               ) : (
                 <div className="render-placeholder">
-                  {initialImage && (
-                    <img src={initialImage} alt="Original" className="render-fallback" />
+                  {project?.sourceImage && (
+                    <img src={project.sourceImage} alt="Original" className="render-fallback" />
                   )}
                 </div>
               )}

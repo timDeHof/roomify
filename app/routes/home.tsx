@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { Route } from "./+types/home";
 import Navbar from "../../components/navbar";
 import Upload from "../../components/upload";
@@ -6,7 +6,7 @@ import Button from "components/ui/button";
 import { useNavigate } from "react-router";
 import { ArrowRight, ArrowUpRight, Layers, Clock } from "lucide-react";
 import { MAX_UPLOAD_SIZE } from "../../lib/constants";
-import { createProject } from "../../lib/puter.action";
+import { createProject, getProjects } from "../../lib/puter.action";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -18,9 +18,13 @@ export function meta({}: Route.MetaArgs) {
 export default function Home() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState<DesignItem[]>([]);
+  const isCreatingProjectRef = useRef(false);
 
   const handleUploadComplete = async (base64Image: string) => {
     // Handle upload completion logic here
+    try {
+      if(isCreatingProjectRef.current) return false; // prevent multiple simultaneous project creations
+    isCreatingProjectRef.current = true;
     const newId = Date.now().toString();
 
     const name = `Residence ${newId}`;
@@ -36,7 +40,7 @@ export default function Home() {
     const saved = await createProject({ item: newItem, visibility: "private" });
 
     if (!saved) {
-      console.error("Failed to save project");
+      console.error("Failed to create project");
       return false;
     }
 
@@ -51,8 +55,20 @@ export default function Home() {
     });
 
     return true;
-  };
+    } finally{      isCreatingProjectRef.current = false;}
 
+  };
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const items = await getProjects();
+        setProjects(items ?? []);
+      } catch (error) {
+        console.error("Failed to fetch projects:", error);
+      }
+    };
+    fetchProjects();
+  }, []);
   return (
     <div className="home">
       <Navbar />
@@ -107,8 +123,8 @@ export default function Home() {
           </div>
           <div className="projects-grid">
             {projects.map(
-              ({ id, name, sourceImage, renderedImage, timestamp }) => (
-                <div key={id} className="project-card group">
+              ({ id, name, sourceImage, renderedImage, timestamp}) => (
+                <div key={id} className="project-card group" onClick={() => navigate(`/visualizer/${id}`)}>
                   <div className="preview">
                     <img
                       src={renderedImage || sourceImage}
@@ -124,7 +140,7 @@ export default function Home() {
                       <div className="meta">
                         <Clock size={12} />
                         <span>{new Date(timestamp).toLocaleDateString()}</span>
-                        <span>By John Doe </span>
+                        <span>By John Doe</span>
                       </div>
                     </div>
                     <div className="arrow">
