@@ -111,7 +111,7 @@ const Visualizer = () => {
             <div className="panel-header">
               <div className="panel-meta">
                 <p>Project</p>
-                <h2>{project?.name || `Residence${id}`}</h2>
+                <h2>{project?.name || `Residence ${id}`}</h2>
                 <p className="note">Created by you</p>
               </div>
               <div className="panel-actions">
