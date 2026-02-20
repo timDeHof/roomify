@@ -59,14 +59,16 @@ export default function Home() {
 
   };
   useEffect(() => {
-    // Load initial projects here, e.g. from Puter or a mock
     const fetchProjects = async () => {
-      const items = await getProjects(); // implement this to fetch from Puter
-
-      setProjects(items!);
+      try {
+        const items = await getProjects();
+        setProjects(items ?? []);
+      } catch (error) {
+        console.error("Failed to fetch projects:", error);
+      }
     };
     fetchProjects();
-    },[]);
+  }, []);
   return (
     <div className="home">
       <Navbar />
