@@ -21,10 +21,6 @@ export const getCurrentUser = async () => {
 export const createProject = async ({
   item, visibility = "private"
 }: CreateProjectParams): Promise<DesignItem | null | undefined> => {
-  if(!PUTER_WORKER_URL) {
-    console.warn("PUTER_WORKER_URL is not defined, cannot create project.");
-    return null;
-  };
   const projectId = item.id;
 
   const hosting = await getOrCreateHostingConfig();
@@ -82,12 +78,28 @@ export const createProject = async ({
   };
 
   try {
-    // Use Puter KV directly - user is already authenticated
-    const key = `roomify_project_${item.id}`;
     const savedPayload = {
       ...payload,
       updatedAt: new Date().toISOString(),
     };
+
+    if (PUTER_WORKER_URL) {
+      // Try worker-based save
+      const response = await puter.workers.exec(`${PUTER_WORKER_URL}/api/projects/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json"},
+        body: JSON.stringify({project: savedPayload, visibility}),
+      });
+
+      if (response.ok) {
+        const data = (await response.json()) as { project?: DesignItem | null };
+        return data?.project ?? savedPayload;
+      }
+      console.warn('Worker save failed, falling back to direct KV');
+    }
+
+    // Fall back to direct KV - user is already authenticated
+    const key = `roomify_project_${item.id}`;
     await puter.kv.set(key, savedPayload);
 
     return savedPayload;
