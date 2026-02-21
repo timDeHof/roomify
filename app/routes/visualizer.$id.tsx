@@ -3,7 +3,7 @@ import { Box, Download, RefreshCcw, Share2, X } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { useRef, useState, useEffect } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router";
-import { createProject, getProjectById } from "lib/puter.action";
+import { createProject, getProjectById, shareProject, unshareProject } from "lib/puter.action";
 import { ReactCompareSlider, ReactCompareSliderImage } from "react-compare-slider";
 
 const Visualizer = () => {
@@ -36,9 +36,29 @@ const Visualizer = () => {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Failed to export image:', error);
-      // TODO: surface a user-visible error toast/notification here
     }
   };
+
+  const handleShare = async () => {
+    if (!id || !project) return;
+
+    try {
+      if (project.isPublic) {
+        const result = await unshareProject({ id });
+        if (result) {
+          setProject(result);
+        }
+      } else {
+        const result = await shareProject({ id });
+        if (result) {
+          setProject(result);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to toggle share:', error);
+    }
+  };
+
 
   const runGeneration = async (item: DesignItem) => {
     if(!id || !item.sourceImage) return;
@@ -140,8 +160,8 @@ const Visualizer = () => {
                 <Button size="sm" onClick={handleExport} className="export" disabled={!currentImage}>
                   <Download className="w-4 h-4 mr-2" /> Export
                 </Button>
-                <Button size="sm" onClick={()=> {}} className="share">
-                  <Share2 className="w-4 h-4 mr-2" /> Share
+                <Button size="sm" onClick={handleShare} className="share" disabled={!project}>
+                  <Share2 className="w-4 h-4 mr-2" /> {project?.isPublic ? 'Unshare' : 'Share'}
                 </Button>
               </div>
             </div>
