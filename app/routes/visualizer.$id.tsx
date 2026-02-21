@@ -173,6 +173,9 @@ const Visualizer = () => {
                 <Button size="sm" onClick={handleShare} className="share" disabled={!project || isSharing}>
                   <Share2 className="w-4 h-4 mr-2" /> {project?.isPublic ? 'Unshare' : 'Share'}
                 </Button>
+                {shareError && (
+                  <p className="text-red-500 text-xs mt-1">{shareError}</p>
+                )}
               </div>
             </div>
             <div className={`render-area ${isProcessing ? 'is-processing' : ''}`}>
