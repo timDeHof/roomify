@@ -116,7 +116,16 @@ export const getProjects = async (): Promise<DesignItem[] | null | undefined> =>
       pair.key.startsWith('roomify_project_') || pair.key.startsWith('roomify_public_')
     );
     
-    return projectPairs.map((pair: any) => pair.value);
+    const projectsMap = new Map<string, any>();
+    for (const pair of projectPairs) {
+      const key = pair.key;
+      const id = key.replace('roomify_project_', '').replace('roomify_public_', '');
+      if (!projectsMap.has(id)) {
+        projectsMap.set(id, pair.value);
+      }
+    }
+    
+    return Array.from(projectsMap.values());
   } catch (error) {
     console.error('failed to get projects:', error);
     return [];
@@ -206,9 +215,9 @@ export const unshareProject = async ({ id }: { id: string }): Promise<DesignItem
     const privateProject: DesignItem = {
       ...project,
       isPublic: false,
-      sharedBy: undefined,
-      sharedById: undefined,
-      sharedAt: undefined,
+      sharedBy: null,
+      sharedById: null,
+      sharedAt: null,
     };
 
     try {
