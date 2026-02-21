@@ -122,12 +122,11 @@ export const getProjects = async (): Promise<DesignItem[] | null | undefined> =>
   }
 }
 
-export const getProjectById = async ({ id }: { id: string }) => {
+export const getProjectById = async ({ id }: { id: string }): Promise<DesignItem | null> => {
   try {
-    // Use Puter KV directly - user is already authenticated
     const key = `roomify_project_${id}`;
-    const project = await puter.kv.get(key);
-    return project || null;
+    const project = await puter.kv.get(key) as DesignItem | null;
+    return project;
   } catch (error) {
     console.error("Failed to fetch project:", error);
     return null;
