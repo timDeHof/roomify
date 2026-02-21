@@ -159,22 +159,33 @@ export const shareProject = async ({ id }: { id: string }): Promise<DesignItem |
       sharedAt: new Date().toISOString(),
     };
 
+    let deletedPrivateKey = false;
+
     try {
       await puter.kv.del(privateKey);
       console.log(`Deleted private key: ${privateKey}`);
+      deletedPrivateKey = true;
     } catch (delError) {
       console.error(`Failed to delete private key ${privateKey}:`, delError);
+      return null;
     }
 
+    let setPublicKey = false;
     try {
       await puter.kv.set(publicKey, sharedProject);
       console.log(`Set public key: ${publicKey}`);
+      setPublicKey = true;
     } catch (setError) {
       console.error(`Failed to set public key ${publicKey}:`, setError);
       console.error("Inconsistent state: private key deleted but public key not set");
+      return null;
     }
 
-    return sharedProject;
+    if (deletedPrivateKey && setPublicKey) {
+      return sharedProject;
+    }
+
+    return null;
   } catch (error) {
     console.error("Failed to share project:", error);
     return null;
@@ -200,8 +211,21 @@ export const unshareProject = async ({ id }: { id: string }): Promise<DesignItem
       sharedAt: undefined,
     };
 
-    await puter.kv.set(privateKey, privateProject);
-    await puter.kv.del(publicKey);
+    try {
+      await puter.kv.set(privateKey, privateProject);
+      console.log(`Set private key: ${privateKey}`);
+    } catch (setError) {
+      console.error(`Failed to set private key ${privateKey}:`, setError);
+      return null;
+    }
+
+    try {
+      await puter.kv.del(publicKey);
+      console.log(`Deleted public key: ${publicKey}`);
+    } catch (delError) {
+      console.error(`Failed to delete public key ${publicKey}:`, delError);
+      console.warn("Project copied to private storage but public key deletion failed");
+    }
 
     return privateProject;
   } catch (error) {
