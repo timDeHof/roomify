@@ -23,6 +23,7 @@ interface DesignItem {
   timestamp: number;
   ownerId?: string | null;
   sharedBy?: string | null;
+  sharedById?: string | null;
   sharedAt?: string | null;
   isPublic?: boolean;
 }

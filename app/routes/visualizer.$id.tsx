@@ -3,7 +3,7 @@ import { Box, Download, RefreshCcw, Share2, X } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { useRef, useState, useEffect } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router";
-import { createProject, getProjectById } from "lib/puter.action";
+import { createProject, getProjectById, shareProject, unshareProject } from "lib/puter.action";
 import { ReactCompareSlider, ReactCompareSliderImage } from "react-compare-slider";
 
 const Visualizer = () => {
@@ -16,6 +16,8 @@ const Visualizer = () => {
   const [currentImage, setCurrentImage] = useState<string | null>(null);
   const [project, setProject] = useState<DesignItem | null>(null);
   const [isProjectLoading, setIsProjectLoading] = useState(true);
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
 
   const handleBack = () => navigate('/');
 
@@ -36,9 +38,37 @@ const Visualizer = () => {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Failed to export image:', error);
-      // TODO: surface a user-visible error toast/notification here
     }
   };
+
+  const handleShare = async () => {
+    if (!id || !project || isSharing) return;
+
+    const currentlyPublic = project.isPublic;
+    setIsSharing(true);
+    setShareError(null);
+
+    try {
+      const result = currentlyPublic
+        ? await unshareProject({ id })
+        : await shareProject({ id });
+
+      if (result === null) {
+        const action = currentlyPublic ? 'unshare' : 'share';
+        console.error(`Failed to ${action} project: result is null`);
+        setShareError(`Failed to ${action} project. Please try again.`);
+        return;
+      }
+
+      setProject(result);
+    } catch (error) {
+      console.error('Failed to toggle share:', error);
+      setShareError('Failed to toggle share. Please try again.');
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
 
   const runGeneration = async (item: DesignItem) => {
     if(!id || !item.sourceImage) return;
@@ -140,9 +170,12 @@ const Visualizer = () => {
                 <Button size="sm" onClick={handleExport} className="export" disabled={!currentImage}>
                   <Download className="w-4 h-4 mr-2" /> Export
                 </Button>
-                <Button size="sm" onClick={()=> {}} className="share">
-                  <Share2 className="w-4 h-4 mr-2" /> Share
+                <Button size="sm" onClick={handleShare} className="share" disabled={!project || isSharing}>
+                  <Share2 className="w-4 h-4 mr-2" /> {project?.isPublic ? 'Unshare' : 'Share'}
                 </Button>
+                {shareError && (
+                  <p className="text-red-500 text-xs mt-1">{shareError}</p>
+                )}
               </div>
             </div>
             <div className={`render-area ${isProcessing ? 'is-processing' : ''}`}>

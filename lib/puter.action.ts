@@ -111,24 +111,134 @@ export const createProject = async ({
 
 export const getProjects = async (): Promise<DesignItem[] | null | undefined> => {
   try {
-    // Use Puter KV directly - user is already authenticated
     const allPairs = await puter.kv.list(true);
-    const projectPairs = allPairs.filter((pair: any) => pair.key.startsWith('roomify_project_'));
+    const projectPairs = allPairs.filter((pair: any) => 
+      pair.key.startsWith('roomify_project_') || pair.key.startsWith('roomify_public_')
+    );
     
-    return projectPairs.map((pair: any) => pair.value);
+    const projectsMap = new Map<string, any>();
+    for (const pair of projectPairs) {
+      const key = pair.key;
+      const id = key.replace('roomify_project_', '').replace('roomify_public_', '');
+      if (!projectsMap.has(id)) {
+        projectsMap.set(id, pair.value);
+      }
+    }
+    
+    return Array.from(projectsMap.values());
   } catch (error) {
-    console.log('failed to get projects:', error);
+    console.error('failed to get projects:', error);
     return [];
   }
 }
 
 export const getProjectById = async ({ id }: { id: string }): Promise<DesignItem | null> => {
   try {
-    const key = `roomify_project_${id}`;
-    const project = await puter.kv.get(key) as DesignItem | null;
+    const privateKey = `roomify_project_${id}`;
+    const publicKey = `roomify_public_${id}`;
+
+    let project = await puter.kv.get(privateKey) as DesignItem | null;
+    if (!project) {
+      project = await puter.kv.get(publicKey) as DesignItem | null;
+    }
     return project;
   } catch (error) {
     console.error("Failed to fetch project:", error);
+    return null;
+  }
+};
+
+export const shareProject = async ({ id }: { id: string }): Promise<DesignItem | null> => {
+  try {
+    const privateKey = `roomify_project_${id}`;
+    const publicKey = `roomify_public_${id}`;
+
+    const project = await puter.kv.get(privateKey) as DesignItem | null;
+    if (!project) {
+      console.error("Project not found in private storage");
+      return null;
+    }
+
+    const user = await puter.auth.getUser();
+    const sharedProject: DesignItem = {
+      ...project,
+      isPublic: true,
+      sharedBy: user?.username || null,
+      sharedById: user?.uuid || null,
+      sharedAt: new Date().toISOString(),
+    };
+
+    let deletedPrivateKey = false;
+
+    try {
+      await puter.kv.del(privateKey);
+      console.log(`Deleted private key: ${privateKey}`);
+      deletedPrivateKey = true;
+    } catch (delError) {
+      console.error(`Failed to delete private key ${privateKey}:`, delError);
+      return null;
+    }
+
+    let setPublicKey = false;
+    try {
+      await puter.kv.set(publicKey, sharedProject);
+      console.log(`Set public key: ${publicKey}`);
+      setPublicKey = true;
+    } catch (setError) {
+      console.error(`Failed to set public key ${publicKey}:`, setError);
+      console.error("Inconsistent state: private key deleted but public key not set");
+      return null;
+    }
+
+    if (deletedPrivateKey && setPublicKey) {
+      return sharedProject;
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Failed to share project:", error);
+    return null;
+  }
+};
+
+export const unshareProject = async ({ id }: { id: string }): Promise<DesignItem | null> => {
+  try {
+    const privateKey = `roomify_project_${id}`;
+    const publicKey = `roomify_public_${id}`;
+
+    const project = await puter.kv.get(publicKey) as DesignItem | null;
+    if (!project) {
+      console.error("Project not found in public storage");
+      return null;
+    }
+
+    const privateProject: DesignItem = {
+      ...project,
+      isPublic: false,
+      sharedBy: null,
+      sharedById: null,
+      sharedAt: null,
+    };
+
+    try {
+      await puter.kv.set(privateKey, privateProject);
+      console.log(`Set private key: ${privateKey}`);
+    } catch (setError) {
+      console.error(`Failed to set private key ${privateKey}:`, setError);
+      return null;
+    }
+
+    try {
+      await puter.kv.del(publicKey);
+      console.log(`Deleted public key: ${publicKey}`);
+    } catch (delError) {
+      console.error(`Failed to delete public key ${publicKey}:`, delError);
+      console.warn("Project copied to private storage but public key deletion failed");
+    }
+
+    return privateProject;
+  } catch (error) {
+    console.error("Failed to unshare project:", error);
     return null;
   }
 };

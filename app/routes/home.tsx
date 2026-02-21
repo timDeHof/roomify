@@ -3,10 +3,16 @@ import type { Route } from "./+types/home";
 import Navbar from "../../components/navbar";
 import Upload from "../../components/upload";
 import Button from "components/ui/button";
-import { useNavigate } from "react-router";
+import { useNavigate, useOutletContext } from "react-router";
 import { ArrowRight, ArrowUpRight, Layers, Clock } from "lucide-react";
 import { MAX_UPLOAD_SIZE } from "../../lib/constants";
 import { createProject, getProjects } from "../../lib/puter.action";
+
+interface HomeContext {
+  isSignedIn: boolean;
+  userName: string | null;
+  userId: string | null;
+}
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -17,8 +23,13 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Home() {
   const navigate = useNavigate();
+  const { isSignedIn, userName } = useOutletContext<HomeContext>();
   const [projects, setProjects] = useState<DesignItem[]>([]);
   const isCreatingProjectRef = useRef(false);
+
+  const displayedProjects = isSignedIn
+    ? projects
+    : projects.filter((p) => p.isPublic);
 
   const handleUploadComplete = async (base64Image: string) => {
     // Handle upload completion logic here
@@ -122,17 +133,19 @@ export default function Home() {
             </div>
           </div>
           <div className="projects-grid">
-            {projects.map(
-              ({ id, name, sourceImage, renderedImage, timestamp}) => (
+            {displayedProjects.map(
+              ({ id, name, sourceImage, renderedImage, timestamp, isPublic, sharedBy}) => (
                 <div key={id} className="project-card group" onClick={() => navigate(`/visualizer/${id}`)}>
                   <div className="preview">
                     <img
                       src={renderedImage || sourceImage}
                       alt="Project Preview"
                     />
-                    <div className="badge">
-                      <span>Community</span>
-                    </div>
+                    {isPublic && (
+                      <div className="badge">
+                        <span>Community</span>
+                      </div>
+                    )}
                   </div>
                   <div className="card-body">
                     <div>
@@ -140,7 +153,7 @@ export default function Home() {
                       <div className="meta">
                         <Clock size={12} />
                         <span>{new Date(timestamp).toLocaleDateString()}</span>
-                        <span>By John Doe</span>
+                        <span>Created By {sharedBy || userName || "Unknown"}</span>
                       </div>
                     </div>
                     <div className="arrow">
