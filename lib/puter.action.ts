@@ -111,13 +111,14 @@ export const createProject = async ({
 
 export const getProjects = async (): Promise<DesignItem[] | null | undefined> => {
   try {
-    // Use Puter KV directly - user is already authenticated
     const allPairs = await puter.kv.list(true);
-    const projectPairs = allPairs.filter((pair: any) => pair.key.startsWith('roomify_project_'));
+    const projectPairs = allPairs.filter((pair: any) => 
+      pair.key.startsWith('roomify_project_') || pair.key.startsWith('roomify_public_')
+    );
     
     return projectPairs.map((pair: any) => pair.value);
   } catch (error) {
-    console.log('failed to get projects:', error);
+    console.error('failed to get projects:', error);
     return [];
   }
 }
@@ -158,8 +159,20 @@ export const shareProject = async ({ id }: { id: string }): Promise<DesignItem |
       sharedAt: new Date().toISOString(),
     };
 
-    await puter.kv.set(publicKey, sharedProject);
-    await puter.kv.del(privateKey);
+    try {
+      await puter.kv.del(privateKey);
+      console.log(`Deleted private key: ${privateKey}`);
+    } catch (delError) {
+      console.error(`Failed to delete private key ${privateKey}:`, delError);
+    }
+
+    try {
+      await puter.kv.set(publicKey, sharedProject);
+      console.log(`Set public key: ${publicKey}`);
+    } catch (setError) {
+      console.error(`Failed to set public key ${publicKey}:`, setError);
+      console.error("Inconsistent state: private key deleted but public key not set");
+    }
 
     return sharedProject;
   } catch (error) {
