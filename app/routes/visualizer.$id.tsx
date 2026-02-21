@@ -20,10 +20,11 @@ const Visualizer = () => {
   const handleBack = () => navigate('/');
 
   const handleExport = async () => {
-    if (!currentImage || !project) return;
+    if (!currentImage) return;
 
     try {
       const response = await fetch(currentImage);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -35,6 +36,7 @@ const Visualizer = () => {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Failed to export image:', error);
+      // TODO: surface a user-visible error toast/notification here
     }
   };
 
