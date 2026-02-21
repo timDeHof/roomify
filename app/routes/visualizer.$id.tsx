@@ -182,7 +182,7 @@ const Visualizer = () => {
                 />
               ):(
                 <div className="compare-fallback">
-                  {!project?.sourceImage && (<img src={project?.sourceImage} alt="Before" className="compare-img"/>)}
+                  {project?.sourceImage && (<img src={project.sourceImage} alt="Before" className="compare-img"/>)}
                 </div>
               )}
             </div>
