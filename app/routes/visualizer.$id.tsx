@@ -175,7 +175,7 @@ const Visualizer = () => {
             <div className="compare-stage">
               {project?.sourceImage && currentImage ? (
                 <ReactCompareSlider
-                defaultValue={50}
+                position={50}
                 style={{ width: '100%', height: 'auto' }}
                 itemOne={<ReactCompareSliderImage src={project.sourceImage} alt="before" className="compare-img"/>}
                 itemTwo={<ReactCompareSliderImage src={currentImage ?? project?.renderedImage ?? undefined} alt="after" className="compare-img"/>}
