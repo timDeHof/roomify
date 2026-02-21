@@ -124,11 +124,75 @@ export const getProjects = async (): Promise<DesignItem[] | null | undefined> =>
 
 export const getProjectById = async ({ id }: { id: string }): Promise<DesignItem | null> => {
   try {
-    const key = `roomify_project_${id}`;
-    const project = await puter.kv.get(key) as DesignItem | null;
+    const privateKey = `roomify_project_${id}`;
+    const publicKey = `roomify_public_${id}`;
+
+    let project = await puter.kv.get(privateKey) as DesignItem | null;
+    if (!project) {
+      project = await puter.kv.get(publicKey) as DesignItem | null;
+    }
     return project;
   } catch (error) {
     console.error("Failed to fetch project:", error);
+    return null;
+  }
+};
+
+export const shareProject = async ({ id }: { id: string }): Promise<DesignItem | null> => {
+  try {
+    const privateKey = `roomify_project_${id}`;
+    const publicKey = `roomify_public_${id}`;
+
+    const project = await puter.kv.get(privateKey) as DesignItem | null;
+    if (!project) {
+      console.error("Project not found in private storage");
+      return null;
+    }
+
+    const user = await puter.auth.getUser();
+    const sharedProject: DesignItem = {
+      ...project,
+      isPublic: true,
+      sharedBy: user?.username || null,
+      sharedById: user?.uuid || null,
+      sharedAt: new Date().toISOString(),
+    };
+
+    await puter.kv.set(publicKey, sharedProject);
+    await puter.kv.del(privateKey);
+
+    return sharedProject;
+  } catch (error) {
+    console.error("Failed to share project:", error);
+    return null;
+  }
+};
+
+export const unshareProject = async ({ id }: { id: string }): Promise<DesignItem | null> => {
+  try {
+    const privateKey = `roomify_project_${id}`;
+    const publicKey = `roomify_public_${id}`;
+
+    const project = await puter.kv.get(publicKey) as DesignItem | null;
+    if (!project) {
+      console.error("Project not found in public storage");
+      return null;
+    }
+
+    const privateProject: DesignItem = {
+      ...project,
+      isPublic: false,
+      sharedBy: undefined,
+      sharedById: undefined,
+      sharedAt: undefined,
+    };
+
+    await puter.kv.set(privateKey, privateProject);
+    await puter.kv.del(publicKey);
+
+    return privateProject;
+  } catch (error) {
+    console.error("Failed to unshare project:", error);
     return null;
   }
 };
