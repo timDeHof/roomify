@@ -16,6 +16,8 @@ const Visualizer = () => {
   const [currentImage, setCurrentImage] = useState<string | null>(null);
   const [project, setProject] = useState<DesignItem | null>(null);
   const [isProjectLoading, setIsProjectLoading] = useState(true);
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
 
   const handleBack = () => navigate('/');
 
@@ -40,22 +42,30 @@ const Visualizer = () => {
   };
 
   const handleShare = async () => {
-    if (!id || !project) return;
+    if (!id || !project || isSharing) return;
+
+    const currentlyPublic = project.isPublic;
+    setIsSharing(true);
+    setShareError(null);
 
     try {
-      if (project.isPublic) {
-        const result = await unshareProject({ id });
-        if (result) {
-          setProject(result);
-        }
-      } else {
-        const result = await shareProject({ id });
-        if (result) {
-          setProject(result);
-        }
+      const result = currentlyPublic
+        ? await unshareProject({ id })
+        : await shareProject({ id });
+
+      if (result === null) {
+        const action = currentlyPublic ? 'unshare' : 'share';
+        console.error(`Failed to ${action} project: result is null`);
+        setShareError(`Failed to ${action} project. Please try again.`);
+        return;
       }
+
+      setProject(result);
     } catch (error) {
       console.error('Failed to toggle share:', error);
+      setShareError('Failed to toggle share. Please try again.');
+    } finally {
+      setIsSharing(false);
     }
   };
 
@@ -160,7 +170,7 @@ const Visualizer = () => {
                 <Button size="sm" onClick={handleExport} className="export" disabled={!currentImage}>
                   <Download className="w-4 h-4 mr-2" /> Export
                 </Button>
-                <Button size="sm" onClick={handleShare} className="share" disabled={!project}>
+                <Button size="sm" onClick={handleShare} className="share" disabled={!project || isSharing}>
                   <Share2 className="w-4 h-4 mr-2" /> {project?.isPublic ? 'Unshare' : 'Share'}
                 </Button>
               </div>
