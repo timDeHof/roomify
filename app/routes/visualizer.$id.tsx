@@ -4,6 +4,7 @@ import { Button } from "../../components/ui/button";
 import { useRef, useState, useEffect } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router";
 import { createProject, getProjectById } from "lib/puter.action";
+import { ReactCompareSlider, ReactCompareSliderImage } from "react-compare-slider";
 
 const Visualizer = () => {
   const { id } = useParams();
@@ -17,6 +18,25 @@ const Visualizer = () => {
   const [isProjectLoading, setIsProjectLoading] = useState(true);
 
   const handleBack = () => navigate('/');
+
+  const handleExport = async () => {
+    if (!currentImage || !project) return;
+
+    try {
+      const response = await fetch(currentImage);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `roomify-${id || 'render'}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to export image:', error);
+    }
+  };
 
   const runGeneration = async (item: DesignItem) => {
     if(!id || !item.sourceImage) return;
@@ -115,7 +135,7 @@ const Visualizer = () => {
                 <p className="note">Created by you</p>
               </div>
               <div className="panel-actions">
-                <Button size="sm" onClick={() => {}} className="export" disabled={!currentImage}>
+                <Button size="sm" onClick={handleExport} className="export" disabled={!currentImage}>
                   <Download className="w-4 h-4 mr-2" /> Export
                 </Button>
                 <Button size="sm" onClick={()=> {}} className="share">
@@ -144,6 +164,27 @@ const Visualizer = () => {
               )}
             </div>
             </div>
+            <div className="panel compare">
+              <div className="panel-header">
+                <p>Comparison</p>
+                <h3>Before and After</h3>
+              </div>
+              <div className="hint">Drag to compare</div>
+            <div className="compare-stage">
+              {project?.sourceImage && currentImage ? (
+                <ReactCompareSlider
+                defaultValue={50}
+                style={{ width: '100%', height: 'auto' }}
+                itemOne={<ReactCompareSliderImage src={project.sourceImage} alt="before" className="compare-img"/>}
+                itemTwo={<ReactCompareSliderImage src={currentImage ?? project?.renderedImage ?? undefined} alt="after" className="compare-img"/>}
+                />
+              ):(
+                <div className="compare-fallback">
+                  {!project?.sourceImage && (<img src={project?.sourceImage} alt="Before" className="compare-img"/>)}
+                </div>
+              )}
+            </div>
+              </div>
            </section>
       </div>
   );
