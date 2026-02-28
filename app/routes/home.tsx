@@ -1,12 +1,12 @@
-import { useState, useRef, useEffect } from "react";
-import type { Route } from "./+types/home";
+import Button from "components/ui/button";
+import { ArrowRight, ArrowUpRight, Clock, Layers } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useOutletContext } from "react-router";
 import Navbar from "../../components/navbar";
 import Upload from "../../components/upload";
-import Button from "components/ui/button";
-import { useNavigate, useOutletContext } from "react-router";
-import { ArrowRight, ArrowUpRight, Layers, Clock } from "lucide-react";
 import { MAX_UPLOAD_SIZE } from "../../lib/constants";
 import { createProject, getProjects } from "../../lib/puter.action";
+import type { Route } from "./+types/home";
 
 interface HomeContext {
   isSignedIn: boolean;
@@ -167,5 +167,5 @@ export default function Home() {
         </div>
       </section>
     </div>
-  );
+  )
 }
