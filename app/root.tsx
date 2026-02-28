@@ -1,4 +1,9 @@
-import { useState, useEffect } from "react";
+import {
+  getCurrentUser,
+  signIn as puterSignIn,
+  signOut as puterSignOut,
+} from "lib/puter.action";
+import { useEffect, useState } from "react";
 import {
   isRouteErrorResponse,
   Links,
@@ -9,11 +14,6 @@ import {
 } from "react-router";
 import type { Route } from "./+types/root";
 import "./app.css";
-import {
-  getCurrentUser,
-  signIn as puterSignIn,
-  signOut as puterSignOut,
-} from "lib/puter.action";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -85,9 +85,9 @@ export default function App() {
 
   return (
     <main className="min-h-screen bg-background test-foreground relative z-10">
-      <Outlet context={{ ...authState, refreshAuth, signIn, signOut }} />;
+      <Outlet context={{ ...authState, refreshAuth, signIn, signOut }} />
     </main>
-  );
+  )
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
