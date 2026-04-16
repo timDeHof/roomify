@@ -2,7 +2,11 @@
 
 Transform floor plan photos into beautiful AI-rendered visualizations instantly.
 
-[![Roomify Promo](./promo-video.mp4)](./promo-video.mp4)
+
+
+https://github.com/user-attachments/assets/4ab9d9db-f995-4752-ac04-46dd601bfb2d
+
+
 
 ## What is Roomify?
 
