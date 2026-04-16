@@ -1,24 +1,23 @@
-# Welcome to React Router!
+# Roomify
 
-A modern, production-ready template for building full-stack React applications using React Router.
+Transform floor plan photos into beautiful AI-rendered visualizations instantly.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+[![Roomify Promo](./promo-video.mp4)](./promo-video.mp4)
+
+## What is Roomify?
+
+Roomify is an AI-powered interior design tool that transforms your floor plan photos into stunning 3D visualizations. Simply upload a photo of a floor plan, and Roomify uses AI to generate beautiful renderings that help you visualize the space.
 
 ## Features
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+- 📸 **Photo to Render** - Upload any floor plan photo and get an instant AI rendering
+- 🎨 **AI-Powered** - Powered by advanced AI image generation
+- 💾 **Save & Share** - Save your projects privately or share with the community
+- 📱 **Simple Workflow** - Upload → Generate → Compare → Export
 
 ## Getting Started
 
 ### Installation
-
-Install the dependencies:
 
 ```bash
 npm install
@@ -26,7 +25,7 @@ npm install
 
 ### Development
 
-Start the development server with HMR:
+Start the development server:
 
 ```bash
 npm run dev
@@ -34,54 +33,34 @@ npm run dev
 
 Your application will be available at `http://localhost:5173`.
 
-## Building for Production
+## How It Works
 
-Create a production build:
+1. **Upload** - Drop your floor plan image (JPG, PNG)
+2. **AI Processing** - The AI analyzes your floor plan and generates a render
+3. **Compare** - Use the before/after slider to compare floor plan vs render
+4. **Export** - Download your visualization
 
-```bash
-npm run build
-```
+## Tech Stack
+
+- **Frontend**: React Router v7, React 19, Tailwind CSS v4
+- **Backend**: Puter.js (browser-based cloud)
+- **AI**: Gemini AI for image generation
 
 ## Deployment
 
-### Docker Deployment
-
-To build and run using Docker:
+### Docker
 
 ```bash
-docker build -t my-app .
+docker build -t roomify .
 
 # Run the container
-docker run -p 3000:3000 my-app
+docker run -p 3000:3000 roomify
 ```
 
-The containerized application can be deployed to any platform that supports Docker, including:
+### Puter Deployment
 
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+Roomify runs entirely in the browser using Puter.js - no traditional backend required!
 
 ---
 
-Built with ❤️ using React Router.
+Built with ❤️ using React Router and Puter.js
